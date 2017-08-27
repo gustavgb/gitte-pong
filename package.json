@@ -1,0 +1,19 @@
+{
+  "name": "gitte-pong",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "webpack --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gustavgb/gitte-pong.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gustavgb/gitte-pong/issues"
+  },
+  "homepage": "https://github.com/gustavgb/gitte-pong#readme"
+}
