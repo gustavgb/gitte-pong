@@ -1,10 +1,7 @@
 var dimensions = require('dimensions');
 var images = require('img');
 var modifier = require('modifier');
-var createGame = require('menu');
 var ctx = require('canvas').ctx;
-
-var setModule = null;
 
 function randomColor() {
   var r = Math.floor(Math.random()*255);
@@ -23,14 +20,7 @@ function newGitte() {
   }
 }
 
-function conti() {
-  setModule(createGame(setModule));
-
-  window.removeEventListener('click', conti, false);
-}
-
-function menu(onSetModule) {
-  setModule = onSetModule;
+function menu() {
 
   var a = 0;
 
@@ -43,10 +33,6 @@ function menu(onSetModule) {
     newGitte(),
     newGitte(),
   ];
-
-  setTimeout(function () {
-    window.addEventListener('click', conti, false);
-  }, 5000);
 
   function loop() {
     ctx.drawImage(images.bg, 0, 0, dimensions.cW, dimensions.cH);
@@ -100,11 +86,6 @@ function menu(onSetModule) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('rysCode.dk', dimensions.cW/2, dimensions.cH*0.8 - Math.sin(a*0.8)*20);
-    if (a > 20) {
-      ctx.fillStyle = 'white';
-      ctx.font = '30px Geo';
-      ctx.fillText('Klik for at prøve igen', dimensions.cW/2, dimensions.cH - 50);
-    }
   }
 
   return {

@@ -63,16 +63,26 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 8);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports) {
+
+module.exports = {
+  cW: 600,
+  cH: 1000,
+};
+
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var canvas = document.getElementById('can');
 var ctx = canvas.getContext('2d');
-var dimensions = __webpack_require__(1);
+var dimensions = __webpack_require__(0);
 var cW = dimensions.cW;
 var cH = dimensions.cH;
 
@@ -112,27 +122,212 @@ module.exports = {
 
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports) {
 
-module.exports = {
-  cW: 600,
-  cH: 1000,
+module.exports = 1/60;
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+var images = {};
+
+function addImage(path, name) {
+  var img = new Image();
+  img.src = path;
+
+  images[name] = img;
+}
+
+addImage('images/gitte.png', 'gitte');
+addImage('images/bg.png', 'bg');
+
+module.exports = images;
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var dimensions = __webpack_require__(0);
+var images = __webpack_require__(3);
+var modifier = __webpack_require__(2);
+var createGame = __webpack_require__(7);
+var ctx = __webpack_require__(1).ctx;
+
+var setModule = null;
+
+function randomColor() {
+  var r = Math.floor(Math.random()*255);
+  var g = Math.floor(Math.random()*255);
+  var b = Math.floor(Math.random()*255);
+
+  return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+}
+
+function newGitte() {
+  return {
+    x: Math.random()*(dimensions.cW-100) + 50,
+    y: Math.random()*(dimensions.cH-100) + 50,
+    vX: Math.random()*500 - 250,
+    vY: Math.random()*500 - 250,
+  }
+}
+
+function conti() {
+  setModule(createGame(setModule));
+
+  window.removeEventListener('click', conti, false);
+}
+
+function menu(onSetModule) {
+  setModule = onSetModule;
+
+  var a = 0;
+
+  var list = [
+    newGitte(),
+    newGitte(),
+    newGitte(),
+    newGitte(),
+    newGitte(),
+    newGitte(),
+    newGitte(),
+  ];
+
+  window.addEventListener('click', conti, false);
+
+  function loop() {
+    ctx.drawImage(images.bg, 0, 0, dimensions.cW, dimensions.cH);
+    
+    a += 0.1;
+
+    list.forEach(function (gitte) {
+      gitte.x += gitte.vX*modifier;
+      gitte.y += gitte.vY*modifier;
+
+      if (gitte.x > dimensions.cW || gitte.x < 0) {
+        gitte.vX *= -1;
+      }
+      if (gitte.y > dimensions.cH || gitte.y < 0) {
+        gitte.vY *= -1;
+      }
+
+      ctx.save();
+      ctx.translate(gitte.x, gitte.y);
+      ctx.rotate(a);
+      ctx.drawImage(images.gitte, -100, -100, 200, 200);
+      ctx.restore();
+    });
+    
+    ctx.fillStyle = 'rgba(50, 50, 50, 0.3)';
+    ctx.fillRect(0, 0, dimensions.cW, dimensions.cH);
+    
+    ctx.fillStyle = randomColor();
+    ctx.font = '130px Geo';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Gitte Pong!!', dimensions.cW/2, dimensions.cH*0.4 + Math.sin(a)*100);
+        
+    ctx.fillStyle = 'white';
+    ctx.font = '100px Geo';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('rysCode.dk', dimensions.cW/2, dimensions.cH*0.8 - Math.sin(a*0.8)*20);
+    ctx.font = '50px Geo';
+    ctx.fillText('Klik for at fortsætte', dimensions.cW/2, dimensions.cH - 50);
+  }
+
+  return {
+    loop,
+  }
+}
+
+module.exports = menu;
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+var data = {
+  currentModule: null,
 };
+
+function setModule(m) {
+  data.currentModule = window.module = m;
+}
+
+module.exports = {
+  data,
+  setModule,
+};
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var dimensions = __webpack_require__(0);
+var modifier = __webpack_require__(2);
+var images = __webpack_require__(3);
+var ctx = __webpack_require__(1).ctx;
+
+class Ball {
+  constructor() {
+    this.w = 80;
+    this.h = 80;
+
+    this.x = dimensions.cW / 2 - this.w / 2;
+    this.y = dimensions.cH / 2 - this.h / 2;
+
+    this.vX = 100;
+    this.vY = 200;
+  }
+
+  draw() {
+    ctx.drawImage(images.gitte, this.x, this.y, this.w, this.h);
+  }
+
+  move() {
+    this.x += this.vX * modifier;
+    this.y += this.vY * modifier;
+
+    if (this.x + this.w > dimensions.cW && this.vX > 0) {
+      this.vX *= -1;
+    }
+    if (this.x < 0 && this.vX < 0) {
+      this.vX *= -1;
+    }
+  }
+
+  shoot(relX, relY) {
+    this.vX = 200 * (Math.random()*0.5 + 0.5) * relX;
+    this.vY = 350 * relY;
+  }
+
+  reset() {
+    this.x = dimensions.cW / 2 - this.w / 2;
+    this.y = dimensions.cH / 2 - this.h / 2;
+
+    this.vX = 100;
+    this.vY = 200;
+  }
+}
+
+module.exports = Ball;
 
 
 /***/ }),
-/* 2 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Player = __webpack_require__(5);
-var Opponent = __webpack_require__(8);
-var Ball = __webpack_require__(9);
-var touch = __webpack_require__(6);
-var dimensions = __webpack_require__(1);
-var images = __webpack_require__(10);
-var createWin = __webpack_require__(14);
-var ctx = __webpack_require__(0).ctx;
+var Player = __webpack_require__(10);
+var Opponent = __webpack_require__(9);
+var Ball = __webpack_require__(6);
+var touch = __webpack_require__(11);
+var dimensions = __webpack_require__(0);
+var images = __webpack_require__(3);
+var createWin = __webpack_require__(13);
+var ctx = __webpack_require__(1).ctx;
 
 var setModule = null;
 
@@ -246,16 +441,16 @@ function game(onSetModule) {
 module.exports = game;
 
 /***/ }),
-/* 3 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var createMenu = __webpack_require__(12);
-var dimensions = __webpack_require__(1);
-var module = __webpack_require__(11);
+var createMenu = __webpack_require__(4);
+var dimensions = __webpack_require__(0);
+var module = __webpack_require__(5);
 var cW = dimensions.cW;
 var cH = dimensions.cH;
 
-var canvas = __webpack_require__(0);
+var canvas = __webpack_require__(1);
 
 canvas.resize();
 
@@ -264,6 +459,8 @@ window.addEventListener('resize', canvas.resize, false);
 var running = false;
 
 function setup() {
+  if (running) return;
+
   module.setModule(createMenu(module.setModule));
 
   running = true;
@@ -282,136 +479,12 @@ function main() {
 window.onload = setup();
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-module.exports = 1/60;
-
-/***/ }),
-/* 5 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var dimensions = __webpack_require__(1);
-var canvas = __webpack_require__(0);
-var modifier = __webpack_require__(4);
-var ctx = canvas.ctx;
-
-class Player {
-  constructor() {
-    this.w = 150;
-    this.h = 30;
-    this.x = dimensions.cW/2 - this.w/2;
-    this.y = dimensions.cH - this.h - 70;
-
-    this.speed = 150;
-
-    this.score = 0;
-  }
-
-  draw() {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(this.x, this.y, this.w, this.h);
-  }
-
-  moveLeft() {
-    this.x -= this.speed * modifier;
-  }
-
-  moveRight() {
-    this.x += this.speed * modifier;
-  }
-}
-
-module.exports = Player;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var userAgent = __webpack_require__(7);
-var canvas = __webpack_require__(0);
-var dimensions = __webpack_require__(1);
-
-var position = {
-  x: null,
-  y: null,
-}
-
-var mouseDown = false;
-
-function setPosition(x, y) {
-  var cW = dimensions.cW;
-  var cH = dimensions.cH;
-  var w = canvas.canvas.width;
-  var h = canvas.canvas.height;
-  position.x = (x - canvas.offset.x) * (cW/w);
-  position.y = (y - canvas.offset.y) * (cH/h);
-}
-
-function onTouchStart(e) {
-  var data = e.touches[0];
-  mouseDown = true;
-  setPosition(data.clientX, data.clientY);
-}
-
-function onTouchMove(e) {
-  if (mouseDown) {
-    var data = e.touches[0];
-    setPosition(data.clientX, data.clientY);
-  }
-}
-
-function onTouchEnd() {
-  mouseDown = false;
-}
-
-function onMouseDown(e) {
-  setPosition(e.clientX, e.clientY);
-  mouseDown = true;
-}
-
-function onMouseMove(e) {
-  if (mouseDown) {
-    setPosition(e.clientX, e.clientY);
-  }
-}
-
-function onMouseUp() {
-  mouseDown = false;
-}
-
-if (userAgent.isMobile) {
-  window.addEventListener('touchstart', onTouchStart, false);
-  window.addEventListener('touchmove', onTouchMove, false);
-  window.addEventListener('touchend', onTouchEnd, false);
-} else {
-  window.addEventListener('mousedown', onMouseDown, false);
-  window.addEventListener('mousemove', onMouseMove, false);
-  window.addEventListener('mouseup', onMouseUp, false);
-}
-
-module.exports = {
-  position: position,
-}
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports) {
-
-var mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-module.exports = {
-  isMobile: mobile,
-};
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var dimensions = __webpack_require__(1);
-var canvas = __webpack_require__(0);
-var modifier = __webpack_require__(4);
+var dimensions = __webpack_require__(0);
+var canvas = __webpack_require__(1);
+var modifier = __webpack_require__(2);
 var ctx = canvas.ctx;
 
 class Opponent {
@@ -461,206 +534,131 @@ class Opponent {
 module.exports = Opponent;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var dimensions = __webpack_require__(1);
-var modifier = __webpack_require__(4);
-var images = __webpack_require__(10);
-var ctx = __webpack_require__(0).ctx;
+var dimensions = __webpack_require__(0);
+var canvas = __webpack_require__(1);
+var modifier = __webpack_require__(2);
+var ctx = canvas.ctx;
 
-class Ball {
+class Player {
   constructor() {
-    this.w = 80;
-    this.h = 80;
+    this.w = 150;
+    this.h = 30;
+    this.x = dimensions.cW/2 - this.w/2;
+    this.y = dimensions.cH - this.h - 70;
 
-    this.x = dimensions.cW / 2 - this.w / 2;
-    this.y = dimensions.cH / 2 - this.h / 2;
+    this.speed = 150;
 
-    this.vX = 100;
-    this.vY = 200;
+    this.score = 0;
   }
 
   draw() {
-    ctx.drawImage(images.gitte, this.x, this.y, this.w, this.h);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(this.x, this.y, this.w, this.h);
   }
 
-  move() {
-    this.x += this.vX * modifier;
-    this.y += this.vY * modifier;
-
-    if (this.x + this.w > dimensions.cW && this.vX > 0) {
-      this.vX *= -1;
-    }
-    if (this.x < 0 && this.vX < 0) {
-      this.vX *= -1;
-    }
+  moveLeft() {
+    this.x -= this.speed * modifier;
   }
 
-  shoot(relX, relY) {
-    this.vX = 200 * (Math.random()*0.5 + 0.5) * relX;
-    this.vY = 350 * relY;
-  }
-
-  reset() {
-    this.x = dimensions.cW / 2 - this.w / 2;
-    this.y = dimensions.cH / 2 - this.h / 2;
-
-    this.vX = 100;
-    this.vY = 200;
+  moveRight() {
+    this.x += this.speed * modifier;
   }
 }
 
-module.exports = Ball;
+module.exports = Player;
 
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports) {
-
-var images = {};
-
-function addImage(path, name) {
-  var img = new Image();
-  img.src = path;
-
-  images[name] = img;
-}
-
-addImage('images/gitte.png', 'gitte');
-addImage('images/bg.png', 'bg');
-
-module.exports = images;
 
 /***/ }),
 /* 11 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var data = {
-  currentModule: null,
-};
+var userAgent = __webpack_require__(12);
+var canvas = __webpack_require__(1);
+var dimensions = __webpack_require__(0);
 
-function setModule(m) {
-  data.currentModule = window.module = m;
+var position = {
+  x: null,
+  y: null,
+}
+
+var mouseDown = false;
+
+function setPosition(x, y) {
+  var cW = dimensions.cW;
+  var cH = dimensions.cH;
+  var w = canvas.canvas.width;
+  var h = canvas.canvas.height;
+  position.x = (x - canvas.offset.x) * (cW/w);
+  position.y = (y - canvas.offset.y) * (cH/h);
+}
+
+function onTouchStart(e) {
+  var data = e.changedTouches[0];
+  mouseDown = true;
+  setPosition(data.pageX, data.pageY);
+}
+
+function onTouchMove(e) {
+  if (mouseDown) {
+    var data = e.changedTouches[0];
+    setPosition(data.pageX, data.pageY);
+  }
+}
+
+function onTouchEnd() {
+  mouseDown = false;
+}
+
+function onMouseDown(e) {
+  setPosition(e.clientX, e.clientY);
+  mouseDown = true;
+}
+
+function onMouseMove(e) {
+  if (mouseDown) {
+    setPosition(e.clientX, e.clientY);
+  }
+}
+
+function onMouseUp() {
+  mouseDown = false;
+}
+
+if (userAgent.isMobile) {
+  window.addEventListener('touchstart', onTouchStart, false);
+  window.addEventListener('touchmove', onTouchMove, false);
+  window.addEventListener('touchend', onTouchEnd, false);
+} else {
+  window.addEventListener('mousedown', onMouseDown, false);
+  window.addEventListener('mousemove', onMouseMove, false);
+  window.addEventListener('mouseup', onMouseUp, false);
 }
 
 module.exports = {
-  data,
-  setModule,
-};
+  position: position,
+}
 
 /***/ }),
 /* 12 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-var dimensions = __webpack_require__(1);
-var images = __webpack_require__(10);
-var modifier = __webpack_require__(4);
-var createGame = __webpack_require__(2);
-var ctx = __webpack_require__(0).ctx;
+var mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-var setModule = null;
-
-function randomColor() {
-  var r = Math.floor(Math.random()*255);
-  var g = Math.floor(Math.random()*255);
-  var b = Math.floor(Math.random()*255);
-
-  return 'rgb(' + r + ', ' + g + ', ' + b + ')';
-}
-
-function newGitte() {
-  return {
-    x: Math.random()*(dimensions.cW-100) + 50,
-    y: Math.random()*(dimensions.cH-100) + 50,
-    vX: Math.random()*500 - 250,
-    vY: Math.random()*500 - 250,
-  }
-}
-
-function conti() {
-  setModule(createGame(setModule));
-
-  window.removeEventListener('click', conti, false);
-}
-
-function menu(onSetModule) {
-  setModule = onSetModule;
-
-  var a = 0;
-
-  var list = [
-    newGitte(),
-    newGitte(),
-    newGitte(),
-    newGitte(),
-    newGitte(),
-    newGitte(),
-    newGitte(),
-  ];
-
-  window.addEventListener('click', conti, false);
-
-  function loop() {
-    ctx.drawImage(images.bg, 0, 0, dimensions.cW, dimensions.cH);
-    
-    a += 0.1;
-
-    list.forEach(function (gitte) {
-      gitte.x += gitte.vX*modifier;
-      gitte.y += gitte.vY*modifier;
-
-      if (gitte.x > dimensions.cW || gitte.x < 0) {
-        gitte.vX *= -1;
-      }
-      if (gitte.y > dimensions.cH || gitte.y < 0) {
-        gitte.vY *= -1;
-      }
-
-      ctx.save();
-      ctx.translate(gitte.x, gitte.y);
-      ctx.rotate(a);
-      ctx.drawImage(images.gitte, -100, -100, 200, 200);
-      ctx.restore();
-    });
-    
-    ctx.fillStyle = 'rgba(50, 50, 50, 0.3)';
-    ctx.fillRect(0, 0, dimensions.cW, dimensions.cH);
-    
-    ctx.fillStyle = randomColor();
-    ctx.font = '130px Geo';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Gitte Pong!!', dimensions.cW/2, dimensions.cH*0.4 + Math.sin(a)*100);
-        
-    ctx.fillStyle = 'white';
-    ctx.font = '100px Geo';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('rysCode.dk', dimensions.cW/2, dimensions.cH*0.8 - Math.sin(a*0.8)*20);
-    ctx.font = '50px Geo';
-    ctx.fillText('Klik for at fortsætte', dimensions.cW/2, dimensions.cH - 50);
-  }
-
-  return {
-    loop,
-  }
-}
-
-module.exports = menu;
+module.exports = {
+  isMobile: mobile,
+};
 
 /***/ }),
-/* 13 */,
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var dimensions = __webpack_require__(1);
-var images = __webpack_require__(10);
-var modifier = __webpack_require__(4);
-var createGame = __webpack_require__(12);
-var ctx = __webpack_require__(0).ctx;
-
-var setModule = null;
+var dimensions = __webpack_require__(0);
+var images = __webpack_require__(3);
+var modifier = __webpack_require__(2);
+var ctx = __webpack_require__(1).ctx;
 
 function randomColor() {
   var r = Math.floor(Math.random()*255);
@@ -679,14 +677,7 @@ function newGitte() {
   }
 }
 
-function conti() {
-  setModule(createGame(setModule));
-
-  window.removeEventListener('click', conti, false);
-}
-
-function menu(onSetModule) {
-  setModule = onSetModule;
+function menu() {
 
   var a = 0;
 
@@ -699,10 +690,6 @@ function menu(onSetModule) {
     newGitte(),
     newGitte(),
   ];
-
-  setTimeout(function () {
-    window.addEventListener('click', conti, false);
-  }, 5000);
 
   function loop() {
     ctx.drawImage(images.bg, 0, 0, dimensions.cW, dimensions.cH);
@@ -756,11 +743,6 @@ function menu(onSetModule) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('rysCode.dk', dimensions.cW/2, dimensions.cH*0.8 - Math.sin(a*0.8)*20);
-    if (a > 20) {
-      ctx.fillStyle = 'white';
-      ctx.font = '30px Geo';
-      ctx.fillText('Klik for at prøve igen', dimensions.cW/2, dimensions.cH - 50);
-    }
   }
 
   return {

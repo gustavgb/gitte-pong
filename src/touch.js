@@ -19,15 +19,15 @@ function setPosition(x, y) {
 }
 
 function onTouchStart(e) {
-  var data = e.touches[0];
+  var data = e.changedTouches[0];
   mouseDown = true;
-  setPosition(data.clientX, data.clientY);
+  setPosition(data.pageX, data.pageY);
 }
 
 function onTouchMove(e) {
   if (mouseDown) {
-    var data = e.touches[0];
-    setPosition(data.clientX, data.clientY);
+    var data = e.changedTouches[0];
+    setPosition(data.pageX, data.pageY);
   }
 }
 

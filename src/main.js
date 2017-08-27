@@ -13,6 +13,8 @@ window.addEventListener('resize', canvas.resize, false);
 var running = false;
 
 function setup() {
+  if (running) return;
+
   module.setModule(createMenu(module.setModule));
 
   running = true;
